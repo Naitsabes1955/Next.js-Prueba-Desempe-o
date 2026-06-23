@@ -10,34 +10,58 @@ if (!jwtSecret) {
   console.warn("JWT_SECRET is not set. Tokens will be signed with an insecure default for development.");
 }
 
-// In-memory fallback store for development when MONGO_URI is not provided
+type JwtPayload = { sub: string; email: string; name: string };
 type StoredUser = { id: string; name: string; email: string; password: string };
 const inMemoryUsers = new Map<string, StoredUser>();
-
 const useDb = !!process.env.MONGO_URI;
 
-const signToken = (payload: object) => jwt.sign(payload, jwtSecret || "dev_secret_change_me", { expiresIn: "7d" });
+const signAccessToken = (payload: JwtPayload) =>
+  jwt.sign(payload, jwtSecret || "dev_secret_change_me", { expiresIn: "15m" });
 
-export const registerUser = async (data: AuthForm): Promise<AuthResponse> => {
+const signRefreshToken = (payload: JwtPayload) =>
+  jwt.sign(payload, jwtSecret || "dev_secret_change_me", { expiresIn: "30d" });
+
+export const verifyAccessToken = (token: string): JwtPayload => {
+  return jwt.verify(token, jwtSecret || "dev_secret_change_me") as JwtPayload;
+};
+
+export const verifyRefreshToken = (token: string): JwtPayload => {
+  return jwt.verify(token, jwtSecret || "dev_secret_change_me") as JwtPayload;
+};
+
+export const refreshAccessToken = (refreshToken: string) => {
+  const payload = verifyRefreshToken(refreshToken);
+  return signAccessToken(payload);
+};
+
+const generateTokens = (payload: JwtPayload) => ({
+  accessToken: signAccessToken(payload),
+  refreshToken: signRefreshToken(payload),
+});
+
+export const registerUser = async (data: AuthForm): Promise<AuthResponse & { refreshToken: string }> => {
+  const email = data.email.toLowerCase().trim();
+  const hashedPassword = await bcrypt.hash(data.password, 10);
+
   if (useDb) {
     await connectDb();
 
-    const existingUser = await User.findOne({ email: data.email.toLowerCase().trim() });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw new Error("El email ya está registrado");
+      throw new Error("The email is alredy registered");
     }
 
-    const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = await User.create({
       name: data.name?.trim() ?? "",
-      email: data.email.toLowerCase().trim(),
+      email,
       password: hashedPassword,
     });
 
-    const token = signToken({ sub: user._id, email: user.email });
+    const tokens = generateTokens({ sub: user._id.toString(), email: user.email, name: user.name });
 
     return {
-      token,
+      token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       user: {
         id: user._id.toString(),
         name: user.name,
@@ -46,59 +70,58 @@ export const registerUser = async (data: AuthForm): Promise<AuthResponse> => {
     };
   }
 
-  // Fallback: in-memory user store (development only)
-  const email = data.email.toLowerCase().trim();
   if (inMemoryUsers.has(email)) {
-    throw new Error("El email ya está registrado");
+    throw new Error("The email is alredy registered");
   }
 
-  const hashedPassword = await bcrypt.hash(data.password, 10);
   const id = String(Date.now()) + Math.random().toString(36).slice(2, 8);
   const user: StoredUser = { id, name: data.name?.trim() ?? "", email, password: hashedPassword };
   inMemoryUsers.set(email, user);
 
-  const token = signToken({ sub: id, email });
+  const tokens = generateTokens({ sub: id, email, name: user.name });
 
   return {
-    token,
+    token: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
     user: { id, name: user.name, email: user.email },
   };
 };
 
-export const loginUser = async (data: AuthForm): Promise<AuthResponse> => {
+export const loginUser = async (data: AuthForm): Promise<AuthResponse & { refreshToken: string }> => {
+  const email = data.email.toLowerCase().trim();
+
   if (useDb) {
     await connectDb();
 
-    const user = await User.findOne({ email: data.email.toLowerCase().trim() });
+    const user = await User.findOne({ email });
     if (!user) {
-      throw new Error("Credenciales inválidas");
+      throw new Error("invalid Credentials");
     }
 
     const isMatch = await bcrypt.compare(data.password, user.password);
     if (!isMatch) {
-      throw new Error("Credenciales inválidas");
+      throw new Error("invalid Credentials");
     }
 
-    const token = signToken({ sub: user._id, email: user.email });
+    const tokens = generateTokens({ sub: user._id.toString(), email: user.email, name: user.name });
 
     return {
-      token,
+      token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
       user: { id: user._id.toString(), name: user.name, email: user.email },
     };
   }
 
-  // Fallback: in-memory lookup
-  const email = data.email.toLowerCase().trim();
   const user = inMemoryUsers.get(email);
   if (!user) {
-    throw new Error("Credenciales inválidas");
+    throw new Error("invalid Credentials");
   }
 
   const isMatch = await bcrypt.compare(data.password, user.password);
   if (!isMatch) {
-    throw new Error("Credenciales inválidas");
+    throw new Error("invalid Credentials");
   }
 
-  const token = signToken({ sub: user.id, email: user.email });
-  return { token, user: { id: user.id, name: user.name, email: user.email } };
+  const tokens = generateTokens({ sub: user.id, email: user.email, name: user.name });
+  return { token: tokens.accessToken, refreshToken: tokens.refreshToken, user: { id: user.id, name: user.name, email: user.email } };
 };

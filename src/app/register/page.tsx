@@ -49,7 +49,6 @@ export default function Register() {
 
   return (
     <main className="min-h-screen bg-dark flex items-center justify-center px-4 py-12">
-      {/* Fondo glow */}
       <div className="pointer-events-none fixed inset-0 flex items-center justify-center">
         <div className="h-96 w-96 opacity-10 rounded-full bg-gold blur-[160px]" />
       </div>
@@ -162,7 +161,6 @@ export default function Register() {
               />
             </div>
 
-            {/* Indicador fuerza contraseña */}
             {form.password.length > 0 && (
               <div className="space-y-1">
                 <div className="flex gap-1">
@@ -183,12 +181,12 @@ export default function Register() {
                 </div>
                 <p className="text-xs text-muted">
                   {form.password.length < 3
-                    ? "Muy corta"
+                    ? "Low"
                     : form.password.length < 6
-                    ? "Débil"
+                    ? "Medium"
                     : form.password.length < 9
                     ? "Aceptable"
-                    : "Fuerte"}
+                    : "Strong"}
                 </p>
               </div>
             )}
@@ -196,7 +194,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full rounded-xl bg-gold px-6 py-3.5 text-sm font-bold text-dark shadow-lg shadow-gold/10 transition-all hover:bg-gold-light hover:translate-y-[-1px] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="mt-2 w-full rounded-xl bg-gold px-6 py-3.5 text-sm font-bold text-dark shadow-lg shadow-gold/10 transition-all hover:bg-gold-light hover:translate-y disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -211,7 +209,7 @@ export default function Register() {
         </div>
 
         <p className="mt-8 text-center text-xs text-muted/40">
-          © 2026 Ecommerce Publicidad. Todos los derechos reservados.
+          © 2026 Nait's Recipes. Todos los derechos reservados.
         </p>
       </div>
     </main>

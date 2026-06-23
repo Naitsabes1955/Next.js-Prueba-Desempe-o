@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ecommerce Publicidad",
-  description: "Ecommerce con autenticación y JWT",
+  title: "Nait's Recipes Online",
+  description: "Nait's Recetas Online ecommerce prueba desempeño",
 };
 
 export default function RootLayout({
@@ -29,7 +29,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

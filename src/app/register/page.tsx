@@ -57,8 +57,8 @@ export default function Register() {
         {/* Logo */}
         <div className="mb-10 text-center">
           <Link href="/" className="inline-block">
-            <span className="text-2xl font-extrabold text-gold">Ecommerce</span>
-            <span className="text-2xl font-light text-cream"> Publicidad</span>
+            <span className="text-2xl font-extrabold text-gold">Nait's</span>
+            <span className="text-2xl font-light text-cream"> Recipes</span>
           </Link>
           <p className="mt-2 text-xs uppercase tracking-widest text-muted">
             Crea tu cuenta gratis

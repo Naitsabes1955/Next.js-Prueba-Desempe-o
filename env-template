@@ -1,0 +1,6 @@
+MONGO_URI=""mongodb+srv://<usuario>:<password>@cluster.mongodb.net/<nombre_db>?retryWrites=true&w=majority";"
+
+JWT_SECRET="tu-super-secret-jwt"
+
+EMAIL_USER="tu-email"
+EMAIL_PASS="api-email"

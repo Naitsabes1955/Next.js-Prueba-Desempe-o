@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { registerUser } from "@/services/auth";
 import type { AuthForm } from "@/types/auth";
+import { sendWelcomeEmail } from "@/services/mail";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -23,6 +24,8 @@ export async function POST(request: Request) {
   try {
     const payload = (await request.json()) as AuthForm;
     const result = await registerUser(payload);
+
+    await sendWelcomeEmail(result.user.email, result.user.name);
 
     const response = NextResponse.json(
       { token: result.token, user: result.user },

@@ -2,15 +2,18 @@
 
 import React from "react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
+    const { user, signOut } = useAuth();
+
     return (
         <main className="text-cream bg-dark antialiased">
             <header className="sticky top-0 z-50 border-b border-white/5 bg-dark/80 backdrop-blur-md">
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
                     <h1 className="text-xl font-bold tracking-tight">
-                        <span className="text-gold font-extrabold">Ecommerce</span>
-                        <span className="text-cream font-light"> Publicidad</span>
+                        <span className="text-gold font-extrabold">Nait's</span>
+                        <span className="text-cream font-light"> Recipes</span>
                     </h1>
                     <nav className="hidden gap-8 md:flex">
                         {[
@@ -28,12 +31,27 @@ export default function Home() {
                             </a>
                         ))}
                     </nav>
-                    <a
-                        href="#contact"
-                        className="rounded-full bg-cream px-5 py-2 text-sm font-semibold text-dark transition-all hover:bg-gold hover:scale-105"
-                    >
-                        Inicia con nosotros
-                    </a>
+                    <div className="flex items-center gap-4">
+                        {user ? (
+                            <>
+                                <span className="text-sm font-medium text-cream">Hola, {user.name}</span>
+                                <button
+                                    type="button"
+                                    onClick={signOut}
+                                    className="rounded-full bg-white/5 px-4 py-2 text-sm font-semibold text-cream transition-colors hover:bg-white/10"
+                                >
+                                    Logout
+                                </button>
+                            </>
+                        ) : (
+                            <Link
+                                href="/login"
+                                className="rounded-full bg-cream px-5 py-2 text-sm font-semibold text-dark transition-all hover:bg-gold hover:scale-105"
+                            >
+                                Inicia con nosotros
+                            </Link>
+                        )}
+                    </div>
                 </div>
             </header>
             {/* HERO */}
@@ -158,16 +176,22 @@ export default function Home() {
 
             {/* PRODUCTOS */}
             <section id="products" className="bg-dark py-24">
-                <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                    <div className="flex flex-col items-center text-center mb-16">
+                <div className="mx-auto max-w-7xl px-6 lg:px-8 items-center  content-center">
+                    <div className="flex flex-col items-center mb-16">
                         <span className="text-xs font-bold uppercase tracking-widest text-gold">
                             Catálogo
                         </span>
-                        <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+                        
+                        <h2 className="mt-3 text-4xl font-extrabold  text-white sm:text-5xl">
                             Nuestros Productos
                         </h2>
+
+
                     </div>
 
+                    <Link href={"/recipes"} className="mt-10 inline-block  rounded-xl bg-white px-8 py-4 font-bold text-dark shadow-xl transition-all hover:bg-gold hover:scale-105">
+                        Conoce Todo lo que tenemos para ti
+                    </Link>
                     {/* <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                         {[
                         { name: "Camisetas Personalizadas", tag: "Sublimación" },

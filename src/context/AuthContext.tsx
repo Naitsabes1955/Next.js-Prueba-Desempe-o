@@ -1,15 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
 import type { AuthResponse } from "@/types/auth";
 import { getCurrentUser, logout as apiLogout } from "@/services/api";
 
 export type AuthContextValue = {
-  user: AuthResponse["user"] | null;
+  user: AuthResponse["user"] | null; 
   token: string | null;
   signIn: (data: AuthResponse) => void;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<void>; //don't recibe any param
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -18,7 +17,7 @@ const AUTH_STORAGE_KEY = "ecommerce-auth-token";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<AuthResponse["user"] | null>(null);
+  const [user, setUser] = useState<AuthResponse["user"] | null>(null); //global status could have data (if isLoged ) or null (invited)
 
   const clearSession = () => {
     setToken(null);
@@ -26,36 +25,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(AUTH_STORAGE_KEY);
   };
 
-  const pathname = usePathname();
 
-  useEffect(() => {
+  useEffect(() => { //if doesn't exists data (cookies/localstorage) put null and if isn't invited verify the token if that expires the backend delete
     const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as AuthResponse;
-        setToken(parsed.token);
-        setUser(parsed.user);
-      } catch {
-        localStorage.removeItem(AUTH_STORAGE_KEY);
-      }
+
+    if (!stored) {
+      setToken(null);
+      setUser(null);
+      return;
     }
 
-    const verifySession = async () => {
-      try {
-        const data = await getCurrentUser();
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
-      } catch {
-        clearSession();
-      }
-    };
+    try {
+      const parsed = JSON.parse(stored) as AuthResponse;
+      setToken(parsed.token);
+      setUser(parsed.user);
 
-    verifySession();
-  }, [pathname]);
+      const verifySession = async () => {
+        try {
+          const data = await getCurrentUser();
+          setToken(data.token);
+          setUser(data.user);
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
+        } catch {
+          clearSession();
+        }
+      };
+
+      verifySession();
+    } catch {
+      clearSession();
+    }
+  }, []);
 
   useEffect(() => {
     const handleFocus = () => {
+      const stored = localStorage.getItem(AUTH_STORAGE_KEY);
+        if (!stored) return;
       getCurrentUser().catch(clearSession).then((data) => {
         if (data) {
           setToken(data.token);
@@ -69,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
-  const value = useMemo(
+  const value = useMemo( //freeze the object in memory for don't have to render innecessary each time 
     () => ({
       user,
       token,
